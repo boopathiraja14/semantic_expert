@@ -1,0 +1,56 @@
+version: "0.2.0.dev0"
+name: oprisk_rcsa
+description: RCSA assessments and the action plans raised from them.
+
+datasets:
+  - name: rcsa_assessments
+    description: One row per risk assessed in an RCSA.
+    source: oprisk.public.rcsa_assessments
+    primary_key: [assessment_id]
+    fields:
+      - name: assessment_id
+        expression: {dialects: [{dialect: ANSI_SQL, expression: assessment_id}]}
+      - name: business_unit
+        expression: {dialects: [{dialect: ANSI_SQL, expression: business_unit}]}
+      - name: risk_id
+        expression: {dialects: [{dialect: ANSI_SQL, expression: risk_id}]}
+      - name: inherent_score
+        expression: {dialects: [{dialect: ANSI_SQL, expression: inherent_score}]}
+        description: Impact x likelihood before controls (1-25).
+      - name: residual_score
+        expression: {dialects: [{dialect: ANSI_SQL, expression: residual_score}]}
+        description: Score after controls (1-25).
+      - name: control_rating
+        expression: {dialects: [{dialect: ANSI_SQL, expression: control_rating}]}
+        description: effective, partially_effective or ineffective.
+      - name: assessment_date
+        expression: {dialects: [{dialect: ANSI_SQL, expression: assessment_date}]}
+        dimension: {is_time: true}
+
+  - name: rcsa_actions
+    description: Action plans raised for residual risk above appetite.
+    source: oprisk.public.rcsa_actions
+    primary_key: [action_id]
+    fields:
+      - name: action_id
+        expression: {dialects: [{dialect: ANSI_SQL, expression: action_id}]}
+      - name: assessment_id
+        expression: {dialects: [{dialect: ANSI_SQL, expression: assessment_id}]}
+      - name: due_date
+        expression: {dialects: [{dialect: ANSI_SQL, expression: due_date}]}
+        dimension: {is_time: true}
+      - name: status
+        expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
+        description: open, closed or overdue.
+
+relationships:
+  - name: actions_to_assessments
+    from: rcsa_actions
+    to: rcsa_assessments
+    from_columns: [assessment_id]
+    to_columns: [assessment_id]
+
+metrics:
+  - name: overdue_action_count
+    description: Number of RCSA actions past their due date and not closed.
+    expression: {dialects: [{dialect: ANSI_SQL, expression: "COUNT(CASE WHEN rcsa_actions.status <> 'closed' AND rcsa_actions.due_date < CURRENT_DATE THEN 1 END)"}]}

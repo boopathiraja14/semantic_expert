@@ -1,0 +1,33 @@
+sections:
+  kri_definition:
+    title: What a key risk indicator is
+    keywords: [kri, key risk indicator, definition, owner, frequency, leading, lagging]
+    content:
+      definition: A measurable metric that signals a change in the level of an operational risk, ideally before a loss.
+      required_attributes: [owner, mapped risk, measurement frequency (monthly default), approved thresholds, data source]
+      leading: Predicts future risk, e.g. overdue patching, staff turnover in a critical team.
+      lagging: Reflects past events, e.g. number of losses last month.
+    tables: [oprisk_kri.kri_definitions]
+
+  rag_and_breaches:
+    title: RAG status and breach rules
+    keywords: [rag, green, amber, red, breach, threshold, appetite]
+    content:
+      rag_status: {$ref: l1/shared.yaml#rag_status}
+      breach_rules:
+        - A KRI is in breach when its value is red at a measurement point.
+        - Two consecutive amber readings are treated as a red breach.
+        - Threshold changes need risk committee approval and apply from the next period.
+    tables: [oprisk_kri.kri_values, oprisk_kri.kri_definitions]
+
+  kri_escalation:
+    title: KRI escalation
+    keywords: [escalation, action plan, committee, cro, chief risk officer, consecutive]
+    content:
+      - status: amber
+        action: Owner comment within 5 business days.
+      - status: red
+        action: Action plan within 10 business days; reported to the Operational Risk Committee.
+      - status: red for 3 consecutive periods
+        action: Escalated to the Chief Risk Officer.
+    tables: [oprisk_kri.kri_values]

@@ -1,0 +1,38 @@
+sections:
+  rcsa_process:
+    title: RCSA process and trigger events
+    keywords: [rcsa, self assessment, process, steps, annual, trigger event, sign-off]
+    content:
+      frequency: Annual, plus an out-of-cycle refresh after a trigger event.
+      trigger_events:
+        - A loss event above 1,000,000 USD in the business unit.
+        - A red KRI for 3 consecutive periods.
+        - A major reorganisation, new product or new system.
+      steps:
+        - Identify key risks using the firm risk taxonomy.
+        - Rate inherent risk (before controls).
+        - Rate the controls that mitigate each risk.
+        - Derive residual risk (after controls).
+        - Raise action plans for residual risk above appetite.
+        - Business owner sign-off and second-line challenge.
+    tables: [oprisk_rcsa.rcsa_assessments, oprisk_rcsa.rcsa_actions]
+
+  risk_scoring:
+    title: Inherent and residual risk scoring
+    keywords: [inherent risk, residual risk, impact, likelihood, score, heat map]
+    content:
+      impact: {$ref: l1/shared.yaml#impact_scale}
+      likelihood: {$ref: l1/shared.yaml#likelihood_scale}
+      inherent_score: impact x likelihood before controls (1-25). Bands low 1-4, medium 5-9, high 10-16, critical 20-25.
+      residual_score: Apply the control reduction to likelihood, then recompute the score.
+      appetite_rule: Residual high or critical requires an action plan with a target date.
+    tables: [oprisk_rcsa.rcsa_assessments]
+
+  control_ratings:
+    title: Control effectiveness ratings
+    keywords: [control, effectiveness, effective, partially effective, ineffective, control rating]
+    content:
+      effective: Well designed and operating; reduces likelihood by two levels.
+      partially_effective: Design or operating gaps; reduces likelihood by one level.
+      ineffective: Does not mitigate the risk; no reduction.
+    tables: [oprisk_rcsa.rcsa_assessments]

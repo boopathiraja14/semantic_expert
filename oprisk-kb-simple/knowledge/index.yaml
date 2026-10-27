@@ -1,0 +1,22 @@
+# Level 0 — always in the agent's prompt. Keep it short.
+# Dataset names/descriptions are added automatically from the Level 2 Ossie files.
+# Sample content for illustration; replace with your firm's approved definitions.
+summary: >
+  Operational risk knowledge: loss events, key risk indicators (KRIs) and
+  risk & control self-assessment (RCSA).
+
+domains:
+  loss_events:
+    summary: What counts as an operational loss, Basel event types, capture thresholds, escalation, boundary events.
+    knowledge: l1/loss_events.yaml          # Level 1: business knowledge (sections)
+    tables: l2/oprisk_losses.yaml           # Level 2: Apache Ossie semantic model
+
+  kri:
+    summary: Key risk indicators — definition, RAG thresholds, breaches and escalation.
+    knowledge: l1/kri.yaml
+    tables: l2/oprisk_kri.yaml
+
+  rcsa:
+    summary: Risk & control self-assessment — process, inherent/residual risk and control ratings.
+    knowledge: l1/rcsa.yaml
+    tables: l2/oprisk_rcsa.yaml

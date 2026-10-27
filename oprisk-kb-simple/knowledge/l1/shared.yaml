@@ -1,0 +1,10 @@
+# Shared fragments, pulled into sections with  $ref: l1/shared.yaml#<key>
+rag_status:
+  green: Within appetite. No action required.
+  amber: Approaching appetite limit. Owner must review and comment.
+  red: Outside appetite. A breach requiring an action plan.
+
+impact_scale: {"1": Minimal, "2": Minor, "3": Moderate, "4": Major, "5": Severe}
+likelihood_scale: {"1": Rare, "2": Unlikely, "3": Possible, "4": Likely, "5": Almost certain}
+
+cro_escalation_rule: Notify the Chief Risk Officer within 24 hours of discovery.

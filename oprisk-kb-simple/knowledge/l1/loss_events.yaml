@@ -1,0 +1,67 @@
+# Level 1 — business knowledge for loss events.
+# Each section is searched (BM25) and returned on its own, with $refs expanded.
+# `tables` points to Level 2 datasets as <ossie_model>.<dataset>; they are NOT loaded here.
+sections:
+  event_definition:
+    title: Operational loss event definition
+    keywords: [loss event, gross loss, net loss, recovery, near miss, timing loss]
+    content:
+      definition: >
+        A loss resulting from inadequate or failed internal processes, people and systems,
+        or from external events. Includes legal risk; excludes strategic and reputational risk.
+      gross_loss: Loss before recoveries, including direct charges, provisions and legal costs.
+      recovery: Amount recovered from insurance or third parties, recorded separately with its own date.
+      net_loss: Gross loss minus recoveries.
+      near_miss: An event that could have caused a loss but did not. Recorded with zero impact, excluded from totals.
+      timing_loss: Loss that reverses within the same reporting period. Captured but flagged.
+      rules:
+        - One root cause producing multiple losses is grouped as one event.
+        - Opportunity costs and lost revenue are excluded.
+    tables: [oprisk_losses.op_loss_events, oprisk_losses.op_loss_recoveries]
+
+  key_dates:
+    title: Loss event dates
+    keywords: [occurrence date, discovery date, accounting date, reporting period]
+    content:
+      occurrence_date: When the event happened.
+      discovery_date: When the firm became aware of it. Reporting deadlines run from this date.
+      accounting_date: When the loss hit the general ledger. Used for period totals.
+    tables: [oprisk_losses.op_loss_events]
+
+  basel_event_types:
+    title: Basel Level 1 event types
+    keywords: [event type, classification, basel, internal fraud, external fraud, category]
+    content:
+      rule: Every event gets exactly one Level 1 type, chosen by cause, not where the loss was booked.
+      types:
+        internal_fraud: Acts by an internal party to defraud or circumvent policy (e.g. unauthorised trading).
+        external_fraud: Acts by a third party to defraud or steal (e.g. card fraud, hacking).
+        employment_practices_and_workplace_safety: Breaches of employment, health or safety laws.
+        clients_products_and_business_practices: Failing obligations to clients, product design (e.g. mis-selling).
+        damage_to_physical_assets: Natural disasters or other damage (e.g. flood, fire).
+        business_disruption_and_system_failures: Business disruption or system outages.
+        execution_delivery_and_process_management: Failed processing (e.g. data entry errors, failed settlement).
+    tables: [oprisk_losses.op_loss_events]
+
+  thresholds_and_escalation:
+    title: Capture thresholds and escalation
+    keywords: [threshold, reporting deadline, escalation, cro, chief risk officer, notify]
+    content:
+      capture_threshold_usd: 10000
+      below_threshold: Recorded in aggregate monthly, not individually.
+      timelines:
+        - condition: gross loss >= 10,000 USD
+          action: Record in the loss system within 10 business days of discovery.
+        - condition: gross loss >= 1,000,000 USD
+          action: {$ref: l1/shared.yaml#cro_escalation_rule}
+    tables: [oprisk_losses.op_loss_events]
+
+  boundary_events:
+    title: Credit and market boundary events
+    keywords: [boundary event, credit boundary, market boundary, collateral, credit loss]
+    content:
+      credit_boundary: >
+        Credit losses caused by an operational failure (e.g. a collateral documentation error)
+        are flagged as boundary events. They stay in credit risk capital but are recorded in loss data.
+      market_boundary: Market losses caused by operational failures are treated as operational losses.
+    tables: [oprisk_losses.op_loss_events]

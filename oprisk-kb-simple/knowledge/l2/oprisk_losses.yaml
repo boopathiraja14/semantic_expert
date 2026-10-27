@@ -1,0 +1,88 @@
+# Level 2 — Apache Ossie semantic model (table-level). Validate against the spec schema
+# (core-spec/osi-schema.json in github.com/apache/ossie) before relying on it.
+version: "0.2.0.dev0"
+name: oprisk_losses
+description: Operational loss events and their recoveries.
+ai_context:
+  instructions: Use net_loss_amount unless the user asks for gross. Exclude near misses from loss totals.
+
+datasets:
+  - name: op_loss_events
+    description: One row per operational loss event (including near misses).
+    source: oprisk.public.op_loss_events
+    primary_key: [event_id]
+    fields:
+      - name: event_id
+        expression: {dialects: [{dialect: ANSI_SQL, expression: event_id}]}
+        description: Unique loss event id.
+      - name: business_unit
+        expression: {dialects: [{dialect: ANSI_SQL, expression: business_unit}]}
+        description: Business unit that owns the event.
+      - name: basel_event_type_l1
+        expression: {dialects: [{dialect: ANSI_SQL, expression: basel_event_type_l1}]}
+        description: Basel Level 1 event type, e.g. internal_fraud, external_fraud.
+        ai_context: {synonyms: [event type, loss category]}
+      - name: occurrence_date
+        expression: {dialects: [{dialect: ANSI_SQL, expression: occurrence_date}]}
+        description: Date the event happened.
+        dimension: {is_time: true}
+      - name: discovery_date
+        expression: {dialects: [{dialect: ANSI_SQL, expression: discovery_date}]}
+        description: Date the firm became aware of the event.
+        dimension: {is_time: true}
+      - name: accounting_date
+        expression: {dialects: [{dialect: ANSI_SQL, expression: accounting_date}]}
+        description: Date the loss hit the general ledger. Use for period totals.
+        dimension: {is_time: true}
+      - name: gross_loss_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: gross_loss_amount}]}
+        description: Loss before recoveries, in USD.
+      - name: is_near_miss
+        expression: {dialects: [{dialect: ANSI_SQL, expression: is_near_miss}]}
+        description: True if the event caused no loss.
+      - name: is_boundary_event
+        expression: {dialects: [{dialect: ANSI_SQL, expression: is_boundary_event}]}
+        description: True for credit/market boundary events.
+
+  - name: op_loss_recoveries
+    description: Recoveries (insurance, third party) against loss events.
+    source: oprisk.public.op_loss_recoveries
+    primary_key: [recovery_id]
+    fields:
+      - name: recovery_id
+        expression: {dialects: [{dialect: ANSI_SQL, expression: recovery_id}]}
+      - name: event_id
+        expression: {dialects: [{dialect: ANSI_SQL, expression: event_id}]}
+        description: Loss event this recovery belongs to.
+      - name: recovery_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: recovery_amount}]}
+        description: Amount recovered, in USD.
+      - name: recovery_date
+        expression: {dialects: [{dialect: ANSI_SQL, expression: recovery_date}]}
+        dimension: {is_time: true}
+
+relationships:
+  - name: recoveries_to_events
+    from: op_loss_recoveries
+    to: op_loss_events
+    from_columns: [event_id]
+    to_columns: [event_id]
+
+metrics:
+  - name: gross_loss_amount
+    description: Total gross loss, excluding near misses.
+    expression:
+      dialects:
+        - dialect: ANSI_SQL
+          expression: SUM(CASE WHEN op_loss_events.is_near_miss THEN 0 ELSE op_loss_events.gross_loss_amount END)
+    ai_context: {synonyms: [gross loss, total loss]}
+  - name: recovery_amount
+    description: Total recoveries.
+    expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(op_loss_recoveries.recovery_amount)}]}
+  - name: net_loss_amount
+    description: Gross loss minus recoveries. Default loss metric.
+    expression: {dialects: [{dialect: ANSI_SQL, expression: gross_loss_amount - recovery_amount}]}
+    ai_context: {synonyms: [net loss, loss, losses]}
+  - name: loss_event_count
+    description: Number of loss events, excluding near misses.
+    expression: {dialects: [{dialect: ANSI_SQL, expression: COUNT(CASE WHEN NOT op_loss_events.is_near_miss THEN op_loss_events.event_id END)}]}

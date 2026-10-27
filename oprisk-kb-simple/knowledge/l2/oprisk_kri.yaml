@@ -1,0 +1,57 @@
+version: "0.2.0.dev0"
+name: oprisk_kri
+description: KRI definitions and their periodic values.
+ai_context:
+  instructions: RAG status is stored per period in kri_values.rag_status.
+
+datasets:
+  - name: kri_definitions
+    description: One row per KRI with owner and thresholds.
+    source: oprisk.public.kri_definitions
+    primary_key: [kri_id]
+    fields:
+      - name: kri_id
+        expression: {dialects: [{dialect: ANSI_SQL, expression: kri_id}]}
+      - name: kri_name
+        expression: {dialects: [{dialect: ANSI_SQL, expression: kri_name}]}
+        description: Short name, e.g. failed_trades_pct.
+      - name: owner
+        expression: {dialects: [{dialect: ANSI_SQL, expression: owner}]}
+        description: Accountable business owner.
+      - name: frequency
+        expression: {dialects: [{dialect: ANSI_SQL, expression: frequency}]}
+        description: Measurement frequency, e.g. monthly.
+      - name: amber_threshold
+        expression: {dialects: [{dialect: ANSI_SQL, expression: amber_threshold}]}
+      - name: red_threshold
+        expression: {dialects: [{dialect: ANSI_SQL, expression: red_threshold}]}
+
+  - name: kri_values
+    description: One row per KRI per measurement period.
+    source: oprisk.public.kri_values
+    primary_key: [kri_id, period_end]
+    fields:
+      - name: kri_id
+        expression: {dialects: [{dialect: ANSI_SQL, expression: kri_id}]}
+      - name: period_end
+        expression: {dialects: [{dialect: ANSI_SQL, expression: period_end}]}
+        dimension: {is_time: true}
+      - name: value
+        expression: {dialects: [{dialect: ANSI_SQL, expression: value}]}
+      - name: rag_status
+        expression: {dialects: [{dialect: ANSI_SQL, expression: rag_status}]}
+        description: green, amber or red for the period.
+        ai_context: {synonyms: [status, rag, breach status]}
+
+relationships:
+  - name: values_to_definitions
+    from: kri_values
+    to: kri_definitions
+    from_columns: [kri_id]
+    to_columns: [kri_id]
+
+metrics:
+  - name: red_breach_count
+    description: Number of KRI readings with red status.
+    expression: {dialects: [{dialect: ANSI_SQL, expression: "COUNT(CASE WHEN kri_values.rag_status = 'red' THEN 1 END)"}]}
+    ai_context: {synonyms: [breaches, red kris]}
